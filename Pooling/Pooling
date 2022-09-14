@@ -1,0 +1,24 @@
+#Bayesian Pooled data analysis 
+
+
+#data preparation
+source("../Data_generation.R",local=TRUE)
+
+
+#model
+#source("../pooledmodel.bug",local=TRUE)
+
+
+pooled_data=list(Nc=Nc,nt=nt,Yc_pooled=Yc_pooled,Yt=Yt)
+pooled_inits<- function() {list (k=0.5,beta0=1,beta1=1,.RNG.name="base::Mersenne-Twister",.RNG.seed=sim)}
+pooled_parameters.to.save<- c("beta1","k","mu_c","mu_t")
+pooled_model<-jags.model(file="pooledmodel", data=pooled_data, inits=pooled_inits, n.chains=1, n.adapt=0.2*Niter)
+#update(pooled_model, n.iter=0.2*Niter) # burn in
+result_pooled<-coda.samples(pooled_model, variable.names=pooled_parameters.to.save,thin = 3, n.iter=3*Niter)
+varnames(result_pooled)[1]<-"beta1"
+varnames(result_pooled)[2]<-"k"
+varnames(result_pooled)[3]<-"mu_c"
+varnames(result_pooled)[4]<-"mu_t"
+summary(result_pooled)
+result_pooled_1<-unlist(result_pooled[,"beta1"])
+
