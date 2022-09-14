@@ -1,0 +1,51 @@
+#Modified power prior with independent power prior (MPP Ind) for the negative binomial model
+
+
+#data preparation
+source("../Data_generation.R",local=TRUE)
+
+
+#Log-Likelihood function of MPP Ind
+source("../LogL_MPP_Ind.R",local=TRUE)
+
+
+#Log likelihood only for calculating the scaling constant
+source("../LogLMPPscaling.R",local=TRUE)       #with prior 
+source("../LogLMPPwithoutprior.R",local=TRUE)  #excluding prior for MPP.
+
+
+#The path sampling algorithm
+source("../path_sampling_algorithm.R",local=TRUE) 
+
+
+#MCMC sampling 
+init_Ind=c(rep(1,H+dim+1))
+result_MPP_Ind<-MCMCmetrop1R(LikelihoodMPP_Ind,theta.init=init_Ind,burnin =0.1*Niter,
+                                      mcmc =0.2*Niter,verbose=0, thin = 1 ,V=0.01*diag(length(init_Ind)),
+                                      seed = seed,H=H,X0=X0,X=X,Y0=Y0,Y=Y,weightTemp=weightTemp,
+                                      ScalingConstantTemp=ScalingConstantTemp)
+result_MPP_Ind<-MCMCmetrop1R(LikelihoodMPP_Ind,theta.init=result_MPP_Ind[nrow(result_MPP_Ind),],  
+                                      burnin = 0.1*Niter, mcmc =0.2*Niter,verbose=0, thin = 1,
+                                      V=0.8*cov(result_MPP_Ind[trunc(0.1*Niter):trunc(0.2*Niter),]),
+                                      seed = seed, H=H,X0=X0,X=X,Y0=Y0,Y=Y,weightTemp=weightTemp,
+                                      ScalingConstantTemp=ScalingConstantTemp)
+result_MPP_Ind<-MCMCmetrop1R(LikelihoodMPP_Ind,theta.init=result_MPP_Ind[nrow(result_MPP_Ind),],  
+                                      burnin = 0.1*Niter, mcmc =0.2*Niter,verbose=0, thin = 1,
+                                      V=0.8*cov(result_MPP_Ind[trunc(0.1*Niter):trunc(0.2*Niter),]),
+                                      seed = seed, H=H,X0=X0,X=X,Y0=Y0,Y=Y,weightTemp=weightTemp,
+                                      ScalingConstantTemp=ScalingConstantTemp)
+result_MPP_Ind<-MCMCmetrop1R(LikelihoodMPP_Ind,theta.init=result_MPP_Ind[nrow(result_MPP_Ind),],  
+                                      burnin = 0.5*Niter, mcmc =1*Niter,verbose=0, thin = 5,
+                                      V=0.8*cov(result_MPP_Ind[trunc(0.1*Niter):trunc(0.2*Niter),]),
+                                      seed = seed, H=H,X0=X0,X=X,Y0=Y0,Y=Y,weightTemp=weightTemp,
+                                      ScalingConstantTemp=ScalingConstantTemp)
+result_MPP_Ind<-as.mcmc(as.data.frame((result_MPP_Ind))) 
+for(i in 0:(dim-1)){
+  varnames(result_MPP_Ind)[i+1]<-paste0("beta",i)
+}
+for(i in 1:H){
+  varnames(result_MPP_Ind)[i+dim]<-paste0("weight",i)
+}
+varnames(result_MPP_Ind)[H+dim+1]<-"k"
+summary(result_MPP_Ind)
+
