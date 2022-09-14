@@ -1,0 +1,26 @@
+#Bayesian Meta-analytic prior (MAP) data analysis 
+
+
+#data preparation
+source("../Data_generation.R",local=TRUE)
+
+
+#model
+#source("../MAP_model.bug",local=TRUE)
+
+
+
+MAP_data=list(N0=N0,H=H,HistStudy=HistStudy,Y00=Y00,Yc=Yc,Yt=Yt,nc=nc,nt=nt)
+inits_MAP =function() {list(beta1 = 1,k=0.5,tau = rexp(1, rate = 4),eta = rnorm(1, mean = -1, sd = 0.5),.RNG.name="base::Mersenne-Twister",.RNG.seed=sim)}
+MAP_parameters.to.save<- c("beta1","k","eta","tau","mu_t")
+MAP_model<-jags.model(file="MAP_model.bug", data=MAP_data, inits=inits_MAP, n.chains=1, n.adapt=0.2*Niter)
+#update(MAP_model, n.iter=0.2*Niter) # burn in
+result_MAP<-coda.samples(MAP_model, variable.names=MAP_parameters.to.save,thin = 3, n.iter=3*Niter)
+varnames(result_MAP)[1]<-"beta1"
+varnames(result_MAP)[2]<-"eta"
+varnames(result_MAP)[3]<-"k"
+varnames(result_MAP)[4]<-"mu_t"
+varnames(result_MAP)[5]<-"tau"
+summary(result_MAP)
+result_MAP_1<-unlist(result_MAP[,"beta1"])
+
