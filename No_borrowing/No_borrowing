@@ -1,0 +1,22 @@
+#Bayesian currnet (no borrowing) data analysis 
+
+
+#data preparation
+source("../Data_generation.R",local=TRUE)
+
+   
+#model
+#source("../currentmodel.bug",local=TRUE)
+
+current_data=list(nc=nc,nt=nt,Yc=Yc,Yt=Yt)
+current_inits<- function() {list (k=0.5,beta0=1,beta1=1,.RNG.name="base::Mersenne-Twister",.RNG.seed=sim)}
+current_parameters.to.save<- c("beta1","k","mu_cc","mu_t")
+current_model<-jags.model(file="currentmodel.bug", data=current_data, inits=current_inits, n.chains=1, n.adapt=0.2*Niter)
+#update(current_model, n.iter=0.2*Niter) # burn in
+result_current<-coda.samples(current_model, variable.names=current_parameters.to.save,thin = 3, n.iter=3*Niter)
+varnames(result_current)[1]<-"beta1"
+varnames(result_current)[2]<-"k"
+varnames(result_current)[3]<-"mu_c"
+varnames(result_current)[4]<-"mu_t"
+summary(result_current)
+result_current_1<-unlist(result_current[,"beta1"])
