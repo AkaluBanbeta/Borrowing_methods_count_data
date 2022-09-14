@@ -1,0 +1,24 @@
+model {
+  for(i in 1:nt){
+    Yt[i] ~ dpois(lambda_t[i])
+    lambda_t[i] ~ dgamma(k.inv, kmu.inv_t) # from Gsteiger et al
+  }
+  for(i in 1:nc){
+    Yc[i] ~ dpois(lambda_cc[i])
+    lambda_cc[i] ~ dgamma(k.inv, kmu.inv_cc)
+  }
+  kmu.inv_t <- k.inv*mu.inv_t
+  kmu.inv_cc <- k.inv*mu.inv_cc
+  mu.inv_t <- 1/mu_t
+  mu.inv_cc <- 1/mu_cc
+  k.inv <- 1/k
+  k ~ dexp(0.4) 
+  # From var(y)= mean(y)+k*meany^2 => E(k) = 3.5 => 1/k = 0.28 similarly in  Gsteiger
+  #k ~ dnorm(0, 1)I(0,) # alternative prior gives similar answer
+  #obtained from https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations 
+  mu_t<-mu_cc*RR
+  mu_cc<-exp(beta0)
+  beta0~dnorm(0,1.0E-2)
+  RR<-exp(beta1)
+  beta1~dnorm(0,1.0E-2)
+}
