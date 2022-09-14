@@ -1,0 +1,24 @@
+#Bayesian robustified meta-analytic prior (Robust MAP) analysis 
+
+
+#data preparation
+source("../Data_generation.R",local=TRUE)
+
+
+#model
+#source("../Robust_MAP_model.bug",local=TRUE)
+
+
+Robust_MAP_data=list(N0=N0,H=H,HistStudy=HistStudy,Y00=Y00,Yc=Yc,Yt=Yt,nc=nc,nt=nt)
+inits_Robust_MAP =function() {list(beta1 = 1,k=0.5,tau = rexp(1, rate = 4),eta = rnorm(1, mean = -1, sd = 0.5),.RNG.name="base::Mersenne-Twister",.RNG.seed=sim)}
+Robust_MAP_parameters.to.save<- c("beta1","k","eta","tau","mu_t")
+Robust_MAP_model<-jags.model(file="Robust_MAP_model.bug", data=Robust_MAP_data, inits=inits_Robust_MAP, n.chains=1, n.adapt=0.2*Niter)
+#update(Robust_MAP_model, n.iter=0.2*Niter) # burn in
+result_Robust_MAP<-coda.samples(Robust_MAP_model, variable.names=Robust_MAP_parameters.to.save,thin = 3, n.iter=3*Niter)
+varnames(result_Robust_MAP)[1]<-"beta1"
+varnames(result_Robust_MAP)[2]<-"eta"
+varnames(result_Robust_MAP)[3]<-"k"
+varnames(result_Robust_MAP)[4]<-"mu_t"
+varnames(result_Robust_MAP)[5]<-"tau"
+summary(result_Robust_MAP)
+result_Robust_MAP_1<-unlist(result_Robust_MAP[,"beta1"])
