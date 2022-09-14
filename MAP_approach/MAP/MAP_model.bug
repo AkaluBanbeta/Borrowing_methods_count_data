@@ -1,0 +1,34 @@
+model {  
+    for (j in 1:H){
+    log(mu_c[j])<-theta_c[j]
+    theta_c[j] ~ dnorm(eta,inv_tau2)
+    mu.inv_c[j] <- 1/mu_c[j]
+    }
+    for (i in 1:N0) {
+    kmu.inv_c[i]<-k.inv*mu.inv_c[HistStudy[i]]
+    lambda_c[i] ~ dgamma(k.inv, kmu.inv_c[i])
+    Y00[i] ~ dpois(lambda_c[i])
+    }
+    inv_tau2 <- pow(tau, -2)
+    tau ~ dnorm(0, 1.4)I(0,)  # See important_codes for the value
+    eta  ~ dnorm(0,1.0E-6)
+    for(i in 1:nc){
+    Yc[i] ~ dpois(lambda_cc[i])
+    lambda_cc[i] ~ dgamma(k.inv, kmu.inv_cc)
+    }
+    mu_cc  <-  exp(theta_cc) # in Poisson case theta is log_lambda
+    theta_cc   ~  dnorm(eta, inv_tau2)
+    for(i in 1:nt){
+    Yt[i] ~ dpois(lambda_t[i])
+    lambda_t[i] ~ dgamma(k.inv, kmu.inv_t)
+    }     
+    kmu.inv_t <- k.inv*mu.inv_t
+    kmu.inv_cc <- k.inv*mu.inv_cc
+    mu.inv_t <- 1/mu_t
+    mu.inv_cc <- 1/mu_cc
+    k.inv <- 1/k
+    k ~ dexp(0.4) 
+    mu_t<-mu_cc*RR
+    RR<-exp(beta1)
+    beta1~dnorm(0,1.0E-2)
+    }
